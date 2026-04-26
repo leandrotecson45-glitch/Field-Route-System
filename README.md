@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Field Route System - Real Road Route</title>
+<title>Field Route System - Simple Coordinate Format</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
@@ -39,7 +39,9 @@ button{
   font-weight:bold;
   cursor:pointer;
 }
-button:hover{opacity:.92;}
+button:hover{
+  opacity:.92;
+}
 #map{
   height:62vh;
 }
@@ -52,9 +54,9 @@ button:hover{opacity:.92;}
   line-height:1.6;
 }
 .small{
+  margin-top:6px;
   font-size:12px;
   color:#666;
-  margin-top:6px;
 }
 </style>
 </head>
@@ -62,11 +64,11 @@ button:hover{opacity:.92;}
 <body>
 
 <div class="top">
-  <h2>🛣️ Field Route System (Real Road Route)</h2>
+  <h2>🛣️ Field Route System</h2>
 
-  <textarea id="input" rows="5">Lat: 15.75000 | Lon: 120.96000
-Lat: 15.76000 | Lon: 120.97000
-Lat: 15.77000 | Lon: 120.98000</textarea>
+  <textarea id="input" rows="6">15.26314, 120.95201
+15.27450, 120.96510
+15.28600, 120.97855</textarea>
 
   <input type="number" id="rate" value="10" placeholder="Rate per KM">
 
@@ -77,7 +79,7 @@ Lat: 15.77000 | Lon: 120.98000</textarea>
   </div>
 
   <div class="small">
-    Accurate road-following route using OpenStreetMap + OSRM (free)
+    Format per line: latitude, longitude
   </div>
 </div>
 
@@ -87,7 +89,7 @@ Lat: 15.77000 | Lon: 120.98000</textarea>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <script>
-let map = L.map('map').setView([15.75,120.96],12);
+let map = L.map('map').setView([15.26314,120.95201],12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   attribution:'© OpenStreetMap'
@@ -96,19 +98,22 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 let routeControl = null;
 
 function parseInput(){
-  const lines = document.getElementById("input").value.trim().split("\n");
+
+  let lines = document.getElementById("input").value.trim().split("\n");
   let points = [];
 
   lines.forEach(line=>{
-    let m = line.match(/Lat:\s*([0-9.\-]+)\s*\|\s*Lon:\s*([0-9.\-]+)/i);
 
-    if(m){
-      points.push(
-        L.latLng(
-          parseFloat(m[1]),
-          parseFloat(m[2])
-        )
-      );
+    let parts = line.split(",");
+
+    if(parts.length >= 2){
+
+      let lat = parseFloat(parts[0].trim());
+      let lon = parseFloat(parts[1].trim());
+
+      if(!isNaN(lat) && !isNaN(lon)){
+        points.push(L.latLng(lat,lon));
+      }
     }
   });
 
@@ -120,7 +125,7 @@ function generateRoute(){
   let points = parseInput();
 
   if(points.length < 2){
-    alert("Need at least 2 coordinates.");
+    alert("Need at least 2 valid coordinates.");
     return;
   }
 
@@ -161,14 +166,14 @@ function generateRoute(){
     let payout = km * rate;
 
     document.getElementById("result").innerHTML =
-      "🛣️ Route Status: Real Road Route<br>" +
+      "🛣️ Route Generated<br>" +
       "📏 Total KM: " + km.toFixed(2) + "<br>" +
       "💵 Rate/KM: ₱" + rate.toFixed(2) + "<br>" +
       "💰 TOTAL PAYOUT: ₱" + payout.toFixed(2);
   });
 
   routeControl.on("routingerror", function(){
-    alert("Unable to generate route now. Please try again.");
+    alert("Unable to generate route now. Try again.");
   });
 }
 </script>
